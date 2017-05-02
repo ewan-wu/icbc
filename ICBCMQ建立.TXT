@@ -1,0 +1,128 @@
+一、创建队列管理器
+crtmqm  BBC_G_501290000012
+strmqm BBC_G_501290000012
+runmqsc BBC_G_501290000012
+建立监听，红色部分为监听端口
+DEFINE LISTENER(LSR.PICP) TRPTYPE(TCP) PORT(9007) CONTROL(QMGR)
+服务器通道
+DEFINE CHANNEL(SVRCONN1) CHLTYPE(SVRCONN) TRPTYPE(TCP) REPLACE
+死信队列
+DEFINE QLOCAL(Q_DEAD) DEFPSIST(YES) GET(ENABLED) MAXDEPTH(100000) MAXMSGL(4194304) USAGE(NORMAL) REPLACE
+ALTER QMGR DEADQ(Q_DEAD)
+二、建立本地队列（工行发起）
+1、本地接收队列 Q_L_ICBC_G_REAL
+DEFINE QLOCAL ('Q_L_ICBC_G_REAL') + 
+       LIKE(SYSTEM.DEFAULT.LOCAL.QUEUE) + 
+       REPLACE SHARE USAGE(NORMAL)  + 
+       DEFPSIST(NO)  + 
+       CLUSTER('') + 
+       MAXMSGL(41943040) + 
+       MAXDEPTH(1000000) + 
+       DESCR('')
+三、建立远程队列（工行发起）
+1、远程发送队列 Q_L_501290000012_G_REAL
+DEFINE QREMOTE ('Q_L_501290000012_G_REAL') + 
+       LIKE(SYSTEM.DEFAULT.REMOTE.QUEUE) + 
+       REPLACE DEFPSIST(NO)  + 
+       CLUSTER('') + 
+       RNAME('Q_L_501290000012_G_REAL') + 
+       RQMNAME('BBC_GH') + 
+       XMITQ('BBC_L_501290000012_G_REAL') + 
+       SCOPE(QMGR) + 
+       DESCR('')
+四、建立传输队列（工行发起）
+1、传输队列(BBC_L_501290000012_G_REAL)
+DEFINE QLOCAL ('BBC_L_501290000012_G_REAL') +
+       LIKE(SYSTEM.DEFAULT.LOCAL.QUEUE) +
+       REPLACE SHARE USAGE(XMITQ) +
+       CLUSTER('') +
+       MAXMSGL(41943040) +
+       MAXDEPTH(1000000) +
+       TRIGDATA ('BBC.501290000012.G.R') +
+       INITQ ('SYSTEM.CHANNEL.INITQ') +
+       DEFPSIST (NO) +
+       DESCR('')
+五、消息通道（（工行发起）
+1、接收方通道 BBC.G.xxxxx.R (接收方通道名对应工行端工行发起发起发送方通道名)
+DEFINE CHANNEL (BBC.G.501290000012.R) +
+       CHLTYPE(RCVR) +
+       TRPTYPE(TCP) +
+       MAXMSGL(41943040) + 
+       MCAUSER('') + 
+       REPLACE + 
+       SSLPEER('') + 
+       DESCR('')
+2、发送方通道BBC.xxxxx.G.R，（工行发起发送方通道需要和工行端工行发起接收方通道一致）下面的IP和端口应为工行端MQ的IP和监听端口
+DEFINE CHANNEL (BBC.501290000012.G.R) +
+       CHLTYPE(SDR) +
+       CONNAME('172.26.188.86(9010)') + 
+       XMITQ('BBC_L_501290000012_G_REAL') +
+       TRPTYPE(TCP) +
+       MAXMSGL(41943040) + 
+       MCAUSER('') + 
+       REPLACE + 
+       SSLPEER('') + 
+       DESCR('')
+二、建立本地队列（工银亚洲发起）
+1、本地接收队列 Q_L_ICBC_G_REAL2
+DEFINE QLOCAL ('Q_L_ICBC_G_REAL2') + 
+       LIKE(SYSTEM.DEFAULT.LOCAL.QUEUE) + 
+       REPLACE SHARE USAGE(NORMAL)  + 
+       DEFPSIST(NO)  + 
+       CLUSTER('') + 
+       MAXMSGL(41943040) + 
+       MAXDEPTH(1000000) + 
+       DESCR('')
+三、建立远程队列（（工银亚洲发起）
+1、远程发送队列 Q_L_501290000012_G_REAL2
+DEFINE QREMOTE ('Q_L_501290000012_G_REAL2') + 
+       LIKE(SYSTEM.DEFAULT.REMOTE.QUEUE) + 
+       REPLACE DEFPSIST(NO)  + 
+       CLUSTER('') + 
+       RNAME('Q_L_501290000012_G_REAL2') + 
+       RQMNAME('BBC_GH') + 
+       XMITQ('BBC_L_501290000012_G_REAL2') + 
+       SCOPE(QMGR) + 
+       DESCR('')
+四、建立传输队列（工银亚洲发起）
+1、传输队列(BBC_L_501290000012_G_REAL2)
+DEFINE QLOCAL ('BBC_L_501290000012_G_REAL2') +
+       LIKE(SYSTEM.DEFAULT.LOCAL.QUEUE) +
+       REPLACE SHARE USAGE(XMITQ) +
+       CLUSTER('') +
+       MAXMSGL(41943040) +
+       MAXDEPTH(1000000) +
+       TRIGDATA ('BBC.G.HFYH.REAL') +
+       INITQ ('SYSTEM.CHANNEL.INITQ') +
+       DEFPSIST (NO) +
+       DESCR('')
+五、消息通道（工银亚洲发起）
+1、接收方通道 BBC.HFYH.G.REAL (接收方通道名对应工行端工银发起发送方通道名)
+DEFINE CHANNEL (BBC.HFYH.G.REAL) +
+       CHLTYPE(RCVR) +
+       TRPTYPE(TCP) +
+       MAXMSGL(41943040) + 
+       MCAUSER('') + 
+       REPLACE + 
+       SSLPEER('') + 
+       DESCR('')
+2、发送方通道 BBC.G.HFYH.REAL，(发送方通道名对应工行端工银发起接收方通道名)下面的IP和端口应为工行端MQ的IP和监听端口
+DEFINE CHANNEL (BBC.G.HFYH.REAL) +
+       CHLTYPE(SDR) +
+       CONNAME('172.26.188.86(9010)') + 
+       XMITQ('BBC_L_501290000012_G_REAL2') +
+       TRPTYPE(TCP) +
+       MAXMSGL(41943040) + 
+       MCAUSER('') + 
+       REPLACE + 
+       SSLPEER('') + 
+       DESCR('')
+
+
+设置触发器
+
+1.def process(processName) applicid('start channel') appltype(unix) userdata(sdrChannelName)
+2.def ql(transQueueName) usage(xmitq) trigger trigtype(first) trigdata(' ') initq(system.channal.initq) defpsist(yes)
+3.def chl(sdrChannelName) chltype(sdr) trptype(tcp) xmitq(transQueueName) conname('ip(port)')
+
+

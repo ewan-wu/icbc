@@ -1,0 +1,26 @@
+建立本地队列管理器：
+crtmqm -q -ll PAICBC1 
+启动队列管理器
+strmqm PAICBC1 
+runmqsc PAICBC1 
+定义监听器
+def listener(TOPSLSR) trptype(tcp) port(10136)
+alter listener(TOPSLSR) trptype(tcp) port(10136) control(qmgr)
+建立死信队列
+DEFINE QLOCAL(TOP_DEAD) DEFPSIST(YES) GET(ENABLED)  MAXDEPTH(100000) MAXMSGL(4194304) USAGE(NORMAL) REPLACE
+ALTER QMGR DEADQ(TOP_DEAD)
+
+定义传输队列：
+def ql(PAICBC1.PCN01B1.XMIT) usage(xmitq) defpsist(yes) initq(system.channel.initq) replace 
+
+远程队列在本地的定义：
+				本地应用程序所用到的remotequeue的name																	远程的localqueue的name						使用的传输队列名
+def qr(P.CNHSBC.ICBC.CN_HUB.INSTR_REQ) rqmname(PCN01B) rname(P.CNHSBC.CN_ICBC.CN_HUB.INSTR_REQ) XMITQ(PAICBC1.PCN01B1.XMIT) defpsist(yes) 
+
+定义本地队列
+def ql(P.CNHSBC.CN_HUB.ICBC.INSTR_REQ) defpsist(yes) 
+
+定义收，发两条通道
+def chl(PAICBC1.PCN01B1) chltype(sdr) trptype(tcp) conname('PROD.HUB.CN.HSBC(10232)') xmitq(PAICBC1.PCN01B1.XMIT) replace
+
+def chl(PCN01B1.PAICBC1) chltype(rcvr) trptype(tcp) replace 
